@@ -19,7 +19,7 @@ export function useVoice(onTranscript: (text: string) => void) {
       setState('processing')
       const blob = new Blob(chunksRef.current, { type: 'audio/webm' })
       const formData = new FormData()
-      formData.append('audio', blob)
+      formData.append('audio', blob, 'audio.webm')
 
       try {
         const res = await fetch('/api/voice/transcribe', {
