@@ -22,7 +22,7 @@ export async function POST(req: NextRequest) {
       method: 'POST',
       headers: openRouterHeaders,
       body: JSON.stringify({
-        model: 'mistralai/mistral-7b-instruct',
+        model: 'mistralai/mistral-7b-instruct:free',
         messages: [
           {
             role: 'user',

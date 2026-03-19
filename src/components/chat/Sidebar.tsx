@@ -1,10 +1,12 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter, usePathname } from 'next/navigation'
 import { useChatList } from '@/hooks/useChatList'
 import { groupChatsByDate } from '@/lib/utils'
 import ChatItem from './ChatItem'
+import { supabase } from '@/lib/supabase/client'
+import { User } from '@supabase/supabase-js'
 
 const DEFAULT_MODEL = 'openai/gpt-4o-mini'
 
@@ -13,6 +15,20 @@ export default function Sidebar() {
   const pathname = usePathname()
   const { chats, createChat, deleteChat, togglePin, renameChat } = useChatList()
   const [search, setSearch] = useState('')
+  const [user, setUser] = useState<User | null>(null)
+
+  useEffect(() => {
+    supabase.auth.getUser().then(({ data }) => setUser(data.user))
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_, session) => {
+      setUser(session?.user ?? null)
+    })
+    return () => subscription.unsubscribe()
+  }, [])
+
+  const handleLogout = async () => {
+    await supabase.auth.signOut()
+    router.push('/login')
+  }
 
   const activeChatId = pathname?.split('/chat/')?.[1] ?? null
 
@@ -99,6 +115,30 @@ export default function Sidebar() {
 
         {chats.length === 0 && (
           <p className="text-xs text-[#6B6B6B] px-3 py-4 text-center">No chats yet</p>
+        )}
+      </div>
+
+      {/* Auth Footer */}
+      <div className="p-3 border-t border-[#E5E5E5] mt-auto">
+        {user ? (
+          <div className="flex items-center justify-between px-2">
+            <span className="text-sm text-[#6B6B6B] truncate max-w-[120px]" title={user.email}>
+              {user.email}
+            </span>
+            <button
+              onClick={handleLogout}
+              className="text-sm font-medium text-red-500 hover:text-red-600 transition-colors"
+            >
+              Log out
+            </button>
+          </div>
+        ) : (
+          <button
+            onClick={() => router.push('/login')}
+            className="w-full py-2 flex items-center justify-center gap-2 text-sm font-medium bg-[#0D0D0D] text-white rounded-lg hover:bg-black transition-colors"
+          >
+            Sign In
+          </button>
         )}
       </div>
     </aside>
