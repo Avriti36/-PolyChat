@@ -11,8 +11,7 @@ import { isVisionCapable } from "@/lib/openrouter/models";
 import { supabase } from "@/lib/supabase/client";
 import { useChatList } from "@/hooks/useChatList";
 import { User } from "@supabase/supabase-js";
-
-const GUEST_MESSAGE_LIMIT = 10;
+import { GUEST_MESSAGE_LIMIT } from "@/lib/constants";
 
 interface Props {
   user: User | null;

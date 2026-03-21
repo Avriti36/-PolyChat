@@ -8,8 +8,6 @@ import ChatItem from "./ChatItem";
 import { supabase } from "@/lib/supabase/client";
 import { User } from "@supabase/supabase-js";
 
-const DEFAULT_MODEL = "openai/gpt-4o-mini";
-
 export default function Sidebar() {
   const router = useRouter();
   const pathname = usePathname();

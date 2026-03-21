@@ -12,8 +12,7 @@ import MessageThread from "@/components/chat/MessageThread";
 import InputArea from "@/components/chat/InputArea";
 import { Chat } from "@/types";
 import { User } from "@supabase/supabase-js";
-
-const GUEST_MESSAGE_LIMIT = 10;
+import { GUEST_MESSAGE_LIMIT } from "@/lib/constants";
 
 export default function ChatPage() {
   const { id } = useParams<{ id: string }>();
