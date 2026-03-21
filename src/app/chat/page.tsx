@@ -1,26 +1,37 @@
-import { redirect } from 'next/navigation'
-import { supabaseServer } from '@/lib/supabase/server'
+"use client";
 
-export default async function ChatPage() {
-  const { data: latest } = await supabaseServer
-    .from('chats')
-    .select('id')
-    .order('updated_at', { ascending: false })
-    .limit(1)
-    .single()
+import { useRouter } from "next/navigation";
+import { useChatList } from "@/hooks/useChatList";
 
-  if (latest?.id) {
-    redirect(`/chat/${latest.id}`)
-  }
+export default function EmptyChatPage() {
+  const router = useRouter();
+  const { createChat } = useChatList();
 
-  // Create a new chat if none exist
-  const { data: newChat } = await supabaseServer
-    .from('chats')
-    .insert({ model_id: 'openai/gpt-4o-mini' })
-    .select()
-    .single()
+  const handleNewChat = async () => {
+    const result = await createChat();
+    if (result.id) {
+      router.push(`/chat/${result.id}`);
+    }
+  };
 
-  if (newChat?.id) redirect(`/chat/${newChat.id}`)
-
-  return null
+  return (
+    <div className="flex flex-col h-full">
+      <div className="flex items-center justify-center h-full">
+        <div className="text-center max-w-md px-4">
+          <h2 className="text-2xl font-semibold text-[#0D0D0D] mb-2">
+            Start a new chat
+          </h2>
+          <p className="text-[#6B6B6B] mb-6">
+            Send a message to begin. Your conversation will appear here.
+          </p>
+          <button
+            onClick={handleNewChat}
+            className="px-6 py-2 bg-[#0D0D0D] text-white rounded-lg hover:bg-black transition-colors"
+          >
+            New Chat
+          </button>
+        </div>
+      </div>
+    </div>
+  );
 }

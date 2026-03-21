@@ -1,64 +1,101 @@
-'use client'
+"use client";
 
-import { useState } from 'react'
-import { useRouter } from 'next/navigation'
-import { supabase } from '@/lib/supabase/client'
+import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { supabase } from "@/lib/supabase/client";
 
 export default function LoginPage() {
-  const router = useRouter()
-  const [isLogin, setIsLogin] = useState(true)
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
-  const [error, setError] = useState('')
-  const [loading, setLoading] = useState(false)
+  const router = useRouter();
+  const [isLogin, setIsLogin] = useState(true);
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [showMigrationMessage, setShowMigrationMessage] = useState(false);
+
+  useEffect(() => {
+    // Check if user just logged in and has guest data to migrate
+    const hasGuestData = localStorage.getItem("guest_session_id");
+    const guestMessageCount = localStorage.getItem("guest_message_count");
+
+    if (hasGuestData && guestMessageCount && parseInt(guestMessageCount) > 0) {
+      setShowMigrationMessage(true);
+    }
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setLoading(true)
-    setError('')
+    e.preventDefault();
+    setLoading(true);
+    setError("");
 
     try {
       if (isLogin) {
-        const { error } = await supabase.auth.signInWithPassword({ email, password })
-        if (error) throw error
-        router.push('/chat')
+        const { error } = await supabase.auth.signInWithPassword({
+          email,
+          password,
+        });
+        if (error) throw error;
+        router.push("/chat");
       } else {
-        const { error } = await supabase.auth.signUp({ email, password })
-        if (error) throw error
-        setError('Signup successful! You can now log in.')
-        setIsLogin(true)
+        const { error } = await supabase.auth.signUp({
+          email,
+          password,
+          options: {
+            emailRedirectTo: `${window.location.origin}/chat`,
+          },
+        });
+        if (error) throw error;
+        setError(
+          "Signup successful! Please check your email to confirm your account.",
+        );
+        setIsLogin(true);
       }
     } catch (err: any) {
-      setError(err.message)
+      setError(err.message);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
+  // Google OAuth - automatically signs in if user exists, or creates account + signs in if not
   const handleGoogleLogin = async () => {
     try {
       const { error } = await supabase.auth.signInWithOAuth({
-        provider: 'google',
+        provider: "google",
         options: {
-          redirectTo: `${window.location.origin}/chat`
-        }
-      })
-      if (error) throw error
+          redirectTo: `${window.location.origin}/chat`,
+        },
+      });
+      if (error) throw error;
     } catch (err: any) {
-      setError(err.message)
+      setError(err.message);
     }
-  }
+  };
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-[#F9F9F8]">
       <div className="w-full max-w-md p-8 bg-white rounded-xl shadow-lg border border-[#E5E5E5]">
         <h1 className="text-2xl font-bold text-center text-[#0D0D0D] mb-6">
-          {isLogin ? 'Welcome Back' : 'Create an Account'}
+          {isLogin ? "Welcome Back" : "Create an Account"}
         </h1>
-        
+
         {error && (
-          <div className={`p-3 rounded-md mb-4 text-sm ${error.includes('successful') ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
+          <div
+            className={`p-3 rounded-md mb-4 text-sm ${error.includes("successful") ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"}`}
+          >
             {error}
+          </div>
+        )}
+
+        {showMigrationMessage && isLogin && (
+          <div className="p-3 rounded-md mb-4 text-sm bg-blue-50 text-blue-700 border border-blue-200">
+            <p className="font-medium mb-1">
+              Your guest data will be preserved!
+            </p>
+            <p className="text-xs">
+              Any chats you created while browsing as a guest will now be
+              associated with your account.
+            </p>
           </div>
         )}
 
@@ -84,7 +121,6 @@ export default function LoginPage() {
               d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
               fill="#EA4335"
             />
-            <path d="M1 1h22v22H1z" fill="none" />
           </svg>
           Continue with Google
         </button>
@@ -94,13 +130,17 @@ export default function LoginPage() {
             <div className="w-full border-t border-[#E5E5E5]"></div>
           </div>
           <div className="relative flex justify-center text-sm">
-            <span className="px-2 bg-white text-[#6B6B6B]">Or continue with email</span>
+            <span className="px-2 bg-white text-[#6B6B6B]">
+              Or continue with email
+            </span>
           </div>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-[#6B6B6B] mb-1">Email</label>
+            <label className="block text-sm font-medium text-[#6B6B6B] mb-1">
+              Email
+            </label>
             <input
               type="email"
               value={email}
@@ -110,7 +150,9 @@ export default function LoginPage() {
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-[#6B6B6B] mb-1">Password</label>
+            <label className="block text-sm font-medium text-[#6B6B6B] mb-1">
+              Password
+            </label>
             <input
               type="password"
               value={password}
@@ -124,7 +166,7 @@ export default function LoginPage() {
             disabled={loading}
             className="w-full py-2 bg-[#0D0D0D] text-white rounded-lg hover:bg-black transition-colors disabled:opacity-50"
           >
-            {loading ? 'Processing...' : isLogin ? 'Sign In' : 'Sign Up'}
+            {loading ? "Processing..." : isLogin ? "Sign In" : "Sign Up"}
           </button>
         </form>
 
@@ -132,15 +174,15 @@ export default function LoginPage() {
           {isLogin ? "Don't have an account? " : "Already have an account? "}
           <button
             onClick={() => {
-              setIsLogin(!isLogin)
-              setError('')
+              setIsLogin(!isLogin);
+              setError("");
             }}
             className="text-[#0D0D0D] font-medium hover:underline"
           >
-            {isLogin ? 'Sign up' : 'Sign in'}
+            {isLogin ? "Sign up" : "Sign in"}
           </button>
         </p>
       </div>
     </div>
-  )
+  );
 }
