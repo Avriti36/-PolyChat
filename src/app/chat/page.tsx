@@ -1,16 +1,21 @@
 "use client";
 
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useChatList } from "@/hooks/useChatList";
 
 export default function EmptyChatPage() {
   const router = useRouter();
   const { createChat } = useChatList();
+  const [error, setError] = useState<string | null>(null);
 
   const handleNewChat = async () => {
     const result = await createChat();
     if (result.id) {
+      setError(null);
       router.push(`/chat/${result.id}`);
+    } else if (result.error) {
+      setError(result.error);
     }
   };
 
@@ -32,6 +37,18 @@ export default function EmptyChatPage() {
           </button>
         </div>
       </div>
+
+      {error && (
+        <div className="mx-4 mb-4 p-4 bg-amber-50 border border-amber-200 rounded-lg">
+          <p className="text-sm text-amber-700 mb-2">{error}</p>
+          <button
+            onClick={() => router.push("/login")}
+            className="text-sm font-medium text-blue-600 hover:text-blue-700 hover:underline"
+          >
+            Sign up for unlimited chats
+          </button>
+        </div>
+      )}
     </div>
   );
 }

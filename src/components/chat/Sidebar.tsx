@@ -17,6 +17,7 @@ export default function Sidebar() {
     useChatList();
   const [search, setSearch] = useState("");
   const [user, setUser] = useState<User | null>(null);
+  const [guestLimitError, setGuestLimitError] = useState<string | null>(null);
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data }) => setUser(data.user));
@@ -37,7 +38,12 @@ export default function Sidebar() {
 
   const handleNewChat = async () => {
     const result = await createChat();
-    if (result.id) router.push(`/chat/${result.id}`);
+    if (result.id) {
+      setGuestLimitError(null);
+      router.push(`/chat/${result.id}`);
+    } else if (result.error) {
+      setGuestLimitError(result.error);
+    }
   };
 
   const handleDelete = async (id: string) => {
@@ -81,6 +87,22 @@ export default function Sidebar() {
           New Chat
         </button>
       </div>
+
+      {/* Guest limit error */}
+      {guestLimitError && (
+        <div className="mx-3 mb-2 p-3 bg-amber-50 border border-amber-200 rounded-lg">
+          <p className="text-sm text-amber-700 mb-2">{guestLimitError}</p>
+          <button
+            onClick={() => {
+              setGuestLimitError(null);
+              router.push("/login");
+            }}
+            className="text-sm font-medium text-blue-600 hover:text-blue-700 hover:underline"
+          >
+            Sign up for unlimited chats
+          </button>
+        </div>
+      )}
 
       {/* Search */}
       <div className="px-3 pb-2">

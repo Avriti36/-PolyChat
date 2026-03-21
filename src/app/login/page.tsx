@@ -11,17 +11,6 @@ export default function LoginPage() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
-  const [showMigrationMessage, setShowMigrationMessage] = useState(false);
-
-  useEffect(() => {
-    // Check if user just logged in and has guest data to migrate
-    const hasGuestData = localStorage.getItem("guest_session_id");
-    const guestMessageCount = localStorage.getItem("guest_message_count");
-
-    if (hasGuestData && guestMessageCount && parseInt(guestMessageCount) > 0) {
-      setShowMigrationMessage(true);
-    }
-  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -84,18 +73,6 @@ export default function LoginPage() {
             className={`p-3 rounded-md mb-4 text-sm ${error.includes("successful") ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"}`}
           >
             {error}
-          </div>
-        )}
-
-        {showMigrationMessage && isLogin && (
-          <div className="p-3 rounded-md mb-4 text-sm bg-blue-50 text-blue-700 border border-blue-200">
-            <p className="font-medium mb-1">
-              Your guest data will be preserved!
-            </p>
-            <p className="text-xs">
-              Any chats you created while browsing as a guest will now be
-              associated with your account.
-            </p>
           </div>
         )}
 

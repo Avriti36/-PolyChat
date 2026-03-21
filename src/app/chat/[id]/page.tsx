@@ -11,15 +11,19 @@ import ChatHeader from "@/components/chat/ChatHeader";
 import MessageThread from "@/components/chat/MessageThread";
 import InputArea from "@/components/chat/InputArea";
 import { Chat } from "@/types";
+import { User } from "@supabase/supabase-js";
+
+const GUEST_MESSAGE_LIMIT = 10;
 
 export default function ChatPage() {
   const { id } = useParams<{ id: string }>();
   const router = useRouter();
   const [chat, setChat] = useState<Chat | null>(null);
+  const [user, setUser] = useState<User | null>(null);
   const { models } = useModels();
   const { deleteChat, renameChat } = useChatList();
   const [guestMessageCount, setGuestMessageCount] = useState(0);
-  const GUEST_MESSAGE_LIMIT = 10;
+  const [streamStarted, setStreamStarted] = useState(false);
 
   const {
     messages,
@@ -27,13 +31,20 @@ export default function ChatPage() {
     setModel,
     streaming,
     streamContent,
+    generatedTitle,
     sendMessage,
     stopStreaming,
     editMessage,
+    startStreamingForExistingMessages,
   } = useChat(id, chat?.model_id ?? "openai/gpt-4o-mini");
 
+  // Check auth and load chat
   useEffect(() => {
     if (!id) return;
+
+    supabase.auth.getUser().then(({ data }) => {
+      setUser(data.user);
+    });
 
     supabase
       .from("chats")
@@ -72,6 +83,24 @@ export default function ChatPage() {
       supabase.removeChannel(channel);
     };
   }, [id]);
+
+  // Update chat title when generated
+  useEffect(() => {
+    if (generatedTitle && chat && chat.title !== generatedTitle) {
+      setChat({ ...chat, title: generatedTitle });
+    }
+  }, [generatedTitle, chat]);
+
+  // Auto-start streaming when there's a user message without assistant response
+  useEffect(() => {
+    if (streamStarted || messages.length === 0 || !id) return;
+
+    const lastMsg = messages[messages.length - 1];
+    if (lastMsg.role === "user" && !streaming) {
+      setStreamStarted(true);
+      startStreamingForExistingMessages();
+    }
+  }, [messages, streaming, id, streamStarted, startStreamingForExistingMessages]);
 
   const visionCapable = models.some(
     (m) => m.id === model && isVisionCapable(m),
@@ -113,6 +142,7 @@ export default function ChatPage() {
         chatId={id}
         title={chat?.title ?? null}
         model={model}
+        user={user}
         onModelChange={setModel}
         onRename={(title) => renameChat(id, title)}
         onDelete={handleDelete}

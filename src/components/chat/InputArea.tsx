@@ -8,7 +8,7 @@ interface Props {
   onSend: (
     content: string,
     image_urls?: string[],
-  ) => Promise<{ success: boolean; error?: string }>;
+  ) => Promise<{ success: boolean; error?: string; restore?: boolean }>;
   streaming: boolean;
   onStop: () => void;
   chatId: string;
@@ -32,6 +32,8 @@ export default function InputArea({
   const [error, setError] = useState<string | null>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const fileRef = useRef<HTMLInputElement>(null);
+  const pendingTextRef = useRef<string>("");
+  const pendingImagesRef = useRef<string[]>([]);
 
   const isGuest = !Number.isFinite(guestMessagesRemaining);
   const showGuestLimit = isGuest && guestMessageLimit < Infinity;
@@ -52,18 +54,34 @@ export default function InputArea({
     if (!text.trim() && images.length === 0) return;
 
     setError(null);
+
+    // Save current text/images to restore on failure
+    pendingTextRef.current = text.trim();
+    pendingImagesRef.current = images;
+
+    // Clear textbox immediately
+    const textToSend = text.trim();
+    const imagesToSend = images.length > 0 ? [...images] : undefined;
+    setText("");
+    setImages([]);
+
     const result = await onSend(
-      text.trim(),
-      images.length > 0 ? images : undefined,
+      textToSend,
+      imagesToSend,
     );
+
+    // If failed and restore flag is set, refill the textbox
+    if (!result.success && result.restore) {
+      setText(pendingTextRef.current);
+      setImages(pendingImagesRef.current);
+      setError(result.error || "Message was not sent");
+      return;
+    }
 
     if (!result.success) {
       setError(result.error || "Failed to send message");
       return;
     }
-
-    setText("");
-    setImages([]);
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {

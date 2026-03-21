@@ -208,6 +208,8 @@ CREATE POLICY "Anyone can view images" ON storage.objects
 -- ============================================
 -- ANONYMOUS USER SUPPORT
 -- ============================================
--- Enable anonymous sign-ins in Supabase dashboard:
+-- Guest users are identified by guest_session_id stored in localStorage
+-- No Supabase anonymous sign-in required - guests create chats directly
+-- API routes use service role key to bypass RLS for guest access
+-- Enable Anonymous Sign-ins in Supabase dashboard if you want native Supabase guest auth:
 -- Authentication > Providers > Anonymous Sign-ins > Enable
--- This allows creating guest sessions that persist across browser sessions
