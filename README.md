@@ -54,7 +54,7 @@ npm install
 ### 3. Set up environment variables
 
 ```bash
-cp .env.example .env.local
+touch .env.local
 ```
 
 Fill in your keys in `.env.local`:
