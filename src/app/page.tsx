@@ -4,7 +4,6 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase/client";
 import { User } from "@supabase/supabase-js";
-import ChatShell from "@/components/chat/ChatShell";
 import HomeView from "@/components/chat/HomeView";
 import Sidebar from "@/components/chat/Sidebar";
 import { PanelLeft } from "lucide-react";
