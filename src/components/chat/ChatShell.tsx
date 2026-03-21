@@ -1,6 +1,10 @@
 import Sidebar from './Sidebar'
 
-export default function ChatShell({ children }: { children: React.ReactNode }) {
+interface Props {
+  children: React.ReactNode
+}
+
+export default function ChatShell({ children }: Props) {
   return (
     <div className="flex h-screen overflow-hidden bg-white">
       <Sidebar />

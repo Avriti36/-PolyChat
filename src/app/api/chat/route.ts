@@ -5,23 +5,29 @@ import { truncateMessages } from '@/lib/utils'
 
 export async function POST(req: NextRequest) {
   try {
-    const { messages, model_id, chat_id } = await req.json()
+    const { messages, model_id, chat_id, is_guest } = await req.json()
 
-    if (!messages || !model_id || !chat_id) {
+    if (!messages || !model_id) {
       return NextResponse.json(
         { error: 'Missing required fields', code: 'INVALID_REQUEST' },
         { status: 400 }
       )
     }
 
-    // Fetch full message history from DB
-    const { data: dbMessages } = await supabaseServer
-      .from('messages')
-      .select('role, content')
-      .eq('chat_id', chat_id)
-      .order('message_index', { ascending: true })
+    let history = messages
 
-    const history = truncateMessages(dbMessages ?? [], 6000)
+    // For authenticated users, fetch full message history from DB
+    if (!is_guest && chat_id) {
+      const { data: dbMessages } = await supabaseServer
+        .from('messages')
+        .select('role, content')
+        .eq('chat_id', chat_id)
+        .order('message_index', { ascending: true })
+
+      history = truncateMessages([...(dbMessages ?? []), ...messages], 6000)
+    } else {
+      history = truncateMessages(messages, 6000)
+    }
 
     const response = await fetch(`${OPENROUTER_BASE}/chat/completions`, {
       method: 'POST',
@@ -60,25 +66,27 @@ export async function POST(req: NextRequest) {
             if (!line.startsWith('data: ')) continue
             const data = line.slice(6).trim()
             if (data === '[DONE]') {
-              // Save assistant message to DB
-              const { count } = await supabaseServer
-                .from('messages')
-                .select('id', { count: 'exact', head: true })
-                .eq('chat_id', chat_id)
+              // Save assistant message to DB only for authenticated users
+              if (!is_guest && chat_id) {
+                const { count } = await supabaseServer
+                  .from('messages')
+                  .select('id', { count: 'exact', head: true })
+                  .eq('chat_id', chat_id)
 
-              await supabaseServer.from('messages').insert({
-                chat_id,
-                role: 'assistant',
-                content: fullContent,
-                model_id,
-                message_index: count ?? 0,
-              })
+                await supabaseServer.from('messages').insert({
+                  chat_id,
+                  role: 'assistant',
+                  content: fullContent,
+                  model_id,
+                  message_index: count ?? 0,
+                })
 
-              // Update chat model + timestamp
-              await supabaseServer
-                .from('chats')
-                .update({ model_id, updated_at: new Date().toISOString() })
-                .eq('id', chat_id)
+                // Update chat model + timestamp
+                await supabaseServer
+                  .from('chats')
+                  .update({ model_id, updated_at: new Date().toISOString() })
+                  .eq('id', chat_id)
+              }
 
               controller.close()
               return
