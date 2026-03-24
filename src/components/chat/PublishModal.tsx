@@ -20,14 +20,27 @@ export default function PublishModal({ chatId, chatTitle, onClose }: Props) {
   const handlePublish = async () => {
     setLoading(true)
     const slug = generateSlug(chatTitle ?? 'chat')
+
+    // Get the current user
+    const { data: { user } } = await supabase.auth.getUser();
+
+    if (!user) {
+      setLoading(false);
+      return;
+    }
+
     const { error } = await supabase.from('published_chats').upsert({
       chat_id: chatId,
+      user_id: user.id, // <--- Add the user_id here so the DB accepts it!
       slug,
       title: chatTitle ?? 'Untitled Chat',
       description: description || null,
       allow_fork: allowFork,
     }, { onConflict: 'chat_id' })
+    
     if (!error) setPublished(`${window.location.origin}/p/${slug}`)
+    else console.error("Publishing error:", error); // Helpful for debugging!
+    
     setLoading(false)
   }
 

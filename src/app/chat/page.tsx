@@ -1,21 +1,29 @@
 "use client";
 
-import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useChatList } from "@/hooks/useChatList";
+import { supabase } from "@/lib/supabase/client";
 
 export default function EmptyChatPage() {
   const router = useRouter();
   const { createChat } = useChatList();
-  const [error, setError] = useState<string | null>(null);
 
   const handleNewChat = async () => {
+    // 1. Check if the user is logged in
+    const { data: { user } } = await supabase.auth.getUser();
+
+    // 2. Guest Bouncer: If not logged in, route them to the main HomeView to chat freely
+    if (!user) {
+      router.push("/"); // Assuming "/" is where your HomeView.tsx lives!
+      return;
+    }
+
+    // 3. Authenticated User Logic: Safely create the chat in the database
     const result = await createChat();
-    if (result.id) {
-      setError(null);
+    if (result?.id) {
       router.push(`/chat/${result.id}`);
-    } else if (result.error) {
-      setError(result.error);
+    } else if (result?.error) {
+      console.error("Failed to create chat:", result.error);
     }
   };
 
@@ -40,18 +48,6 @@ export default function EmptyChatPage() {
           </button>
         </div>
       </div>
-
-      {error && (
-        <div className="mx-4 mb-4 p-3 bg-amber-500/10 border border-amber-500/20 rounded-xl">
-          <p className="text-xs text-amber-400 mb-1.5">{error}</p>
-          <button
-            onClick={() => router.push("/login")}
-            className="text-xs font-medium text-violet-400 hover:text-violet-300"
-          >
-            Sign up for unlimited chats →
-          </button>
-        </div>
-      )}
     </div>
   );
 }

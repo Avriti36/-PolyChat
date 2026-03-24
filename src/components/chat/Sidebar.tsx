@@ -11,10 +11,10 @@ import { User } from "@supabase/supabase-js";
 export default function Sidebar() {
   const router = useRouter();
   const pathname = usePathname();
-  const { chats, createChat, deleteChat, togglePin, renameChat } = useChatList();
+  // Added = [] default to prevent crashes if chats is ever undefined
+  const { chats = [], createChat, deleteChat, togglePin, renameChat } = useChatList() || {};
   const [search, setSearch] = useState("");
   const [user, setUser] = useState<User | null>(null);
-  const [guestLimitError, setGuestLimitError] = useState<string | null>(null);
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data }) => setUser(data.user));
@@ -32,12 +32,18 @@ export default function Sidebar() {
   const activeChatId = pathname?.split("/chat/")?.[1] ?? null;
 
   const handleNewChat = async () => {
+    // Guest User Bouncer: Skip the database and just route to the clean chat screen
+    if (!user) {
+      router.push("/chat");
+      return;
+    }
+
+    // Authenticated User Logic: Safely create a row in the database
     const result = await createChat();
-    if (result.id) {
-      setGuestLimitError(null);
+    if (result?.id) {
       router.push(`/chat/${result.id}`);
-    } else if (result.error) {
-      setGuestLimitError(result.error);
+    } else if (result?.error) {
+      console.error("Database error:", result.error);
     }
   };
 
@@ -82,19 +88,6 @@ export default function Sidebar() {
           </svg>
         </button>
       </div>
-
-      {/* Guest limit error */}
-      {guestLimitError && (
-        <div className="mx-3 mb-2 p-3 bg-amber-500/10 border border-amber-500/20 rounded-xl">
-          <p className="text-xs text-amber-400 mb-1.5">{guestLimitError}</p>
-          <button
-            onClick={() => { setGuestLimitError(null); router.push("/login"); }}
-            className="text-xs font-medium text-violet-400 hover:text-violet-300"
-          >
-            Sign up for unlimited chats →
-          </button>
-        </div>
-      )}
 
       {/* Search */}
       <div className="px-3 pb-2">
@@ -164,25 +157,24 @@ export default function Sidebar() {
       {/* Auth Footer */}
       <div className="p-3 border-t border-white/[0.06]">
         {user ? (
-          <div className="flex items-center gap-2.5 px-1">
-            {avatarUrl ? (
-              <img src={avatarUrl} alt="" className="w-7 h-7 rounded-full object-cover ring-1 ring-white/10 shrink-0" />
-            ) : (
-              <div className="w-7 h-7 rounded-full bg-gradient-to-br from-violet-500 to-indigo-600 flex items-center justify-center text-[10px] font-bold text-white shrink-0">
-                {userInitials}
-              </div>
-            )}
-            <span className="text-xs text-white/50 truncate flex-1" title={user.email}>
-              {user.user_metadata?.full_name ?? user.email}
-            </span>
+          <div className="flex flex-col gap-3">
+            <div className="flex items-center gap-2.5 px-1">
+              {avatarUrl ? (
+                <img src={avatarUrl} alt="" className="w-7 h-7 rounded-full object-cover ring-1 ring-white/10 shrink-0" />
+              ) : (
+                <div className="w-7 h-7 rounded-full bg-gradient-to-br from-violet-500 to-indigo-600 flex items-center justify-center text-[10px] font-bold text-white shrink-0">
+                  {userInitials}
+                </div>
+              )}
+              <span className="text-xs text-white/50 truncate flex-1" title={user.email}>
+                {user.user_metadata?.full_name ?? user.email}
+              </span>
+            </div>
             <button
               onClick={handleLogout}
-              title="Log out"
-              className="p-1.5 rounded-lg text-white/30 hover:text-red-400 hover:bg-red-500/10 transition-all shrink-0"
+              className="w-full py-2 flex items-center justify-center gap-2 text-xs font-semibold bg-gradient-to-r from-violet-600 to-indigo-600 text-white rounded-lg hover:opacity-90 transition-opacity"
             >
-              <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-              </svg>
+              Sign Out
             </button>
           </div>
         ) : (

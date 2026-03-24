@@ -91,12 +91,15 @@ export default function HomeView({ user }: Props) {
     resetChat();
   };
 
-  return (
-    <div className="flex flex-col h-full">
-      {/* Header with controls */}
-      <div className="flex items-center justify-between px-6 py-3 border-b border-[#E5E5E5] bg-white">
+ return (
+    // 1. Added bg-[#161616] to the main wrapper so the whole page is dark
+    <div className="flex flex-col h-full bg-[#161616]">
+      
+      {/* 2. Updated header to dark mode: dark background, subtle white border */}
+      <div className="flex items-center justify-between px-6 py-3 border-b border-white/[0.06] bg-[#161616]">
         <div className="flex items-center gap-3 min-w-0">
-          <h1 className="text-sm font-semibold text-[#0D0D0D] truncate">
+          {/* 3. Changed text to white/80 */}
+          <h1 className="text-sm font-semibold text-white/80 truncate">
             {messages.length === 0 ? "New Chat" : "Chat"}
           </h1>
         </div>
@@ -104,17 +107,18 @@ export default function HomeView({ user }: Props) {
         <div className="flex items-center gap-2 shrink-0">
           <ModelSelector value={model} onChange={setModel} />
 
+          {/* 4. Updated buttons to match the dark theme */}
           {localUser ? (
             <button
               onClick={handleNewChat}
-              className="text-sm px-3 py-1.5 border border-[#E5E5E5] rounded-lg hover:bg-gray-50 transition-colors text-[#0D0D0D]"
+              className="text-sm px-3 py-1.5 border border-white/10 rounded-lg hover:bg-white/8 transition-colors text-white/80 hover:text-white"
             >
               New Chat
             </button>
           ) : (
             <button
               onClick={() => router.push("/login")}
-              className="text-sm px-3 py-1.5 border border-[#E5E5E5] rounded-lg hover:bg-gray-50 transition-colors text-[#0D0D0D]"
+              className="text-sm px-3 py-1.5 border border-white/10 rounded-lg hover:bg-white/8 transition-colors text-white/80 hover:text-white"
             >
               Sign In
             </button>
