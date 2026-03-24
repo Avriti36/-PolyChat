@@ -23,16 +23,16 @@ Built with **Next.js 14**, **TypeScript**, **Supabase**, and **OpenRouter**.
 
 ## Tech Stack
 
-| Layer | Technology |
-|---|---|
-| Framework | Next.js 14 (App Router, TypeScript) |
-| Database | Supabase (Postgres) |
-| Realtime | Supabase Realtime |
-| File Storage | Supabase Storage |
-| LLM Gateway | OpenRouter API |
-| Voice | OpenAI Whisper API |
-| Styling | Tailwind CSS |
-| Deployment | Vercel |
+| Layer        | Technology                          |
+| ------------ | ----------------------------------- |
+| Framework    | Next.js 14 (App Router, TypeScript) |
+| Database     | Supabase (Postgres)                 |
+| Realtime     | Supabase Realtime                   |
+| File Storage | Supabase Storage                    |
+| LLM Gateway  | OpenRouter API                      |
+| Voice        | OpenAI Whisper API                  |
+| Styling      | Tailwind CSS                        |
+| Deployment   | Vercel                              |
 
 ---
 
@@ -112,14 +112,14 @@ src/
 
 ## Environment Variables
 
-| Variable | Description |
-|---|---|
-| `NEXT_PUBLIC_SUPABASE_URL` | Supabase project URL |
-| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Supabase public anon key |
-| `SUPABASE_SERVICE_ROLE_KEY` | Supabase service role key (server only) |
-| `OPENROUTER_API_KEY` | OpenRouter API key |
-| `OPENAI_API_KEY` | OpenAI key for Whisper transcription |
-| `NEXT_PUBLIC_APP_URL` | Your app's public URL |
+| Variable                        | Description                             |
+| ------------------------------- | --------------------------------------- |
+| `NEXT_PUBLIC_SUPABASE_URL`      | Supabase project URL                    |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Supabase public anon key                |
+| `SUPABASE_SERVICE_ROLE_KEY`     | Supabase service role key (server only) |
+| `OPENROUTER_API_KEY`            | OpenRouter API key                      |
+| `OPENAI_API_KEY`                | OpenAI key for Whisper transcription    |
+| `NEXT_PUBLIC_APP_URL`           | Your app's public URL                   |
 
 ---
 

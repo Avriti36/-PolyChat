@@ -15,11 +15,11 @@ export default function PublishModal({ chatId, chatTitle, onClose }: Props) {
   const [allowFork, setAllowFork] = useState(true)
   const [loading, setLoading] = useState(false)
   const [published, setPublished] = useState<string | null>(null)
+  const [copied, setCopied] = useState(false)
 
   const handlePublish = async () => {
     setLoading(true)
     const slug = generateSlug(chatTitle ?? 'chat')
-
     const { error } = await supabase.from('published_chats').upsert({
       chat_id: chatId,
       slug,
@@ -27,68 +27,94 @@ export default function PublishModal({ chatId, chatTitle, onClose }: Props) {
       description: description || null,
       allow_fork: allowFork,
     }, { onConflict: 'chat_id' })
-
-    if (!error) {
-      setPublished(`${window.location.origin}/p/${slug}`)
-    }
+    if (!error) setPublished(`${window.location.origin}/p/${slug}`)
     setLoading(false)
   }
 
+  const handleCopy = () => {
+    if (!published) return
+    navigator.clipboard.writeText(published)
+    setCopied(true)
+    setTimeout(() => setCopied(false), 2000)
+  }
+
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30">
-      <div className="bg-white rounded-2xl shadow-xl w-full max-w-md p-6">
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-base font-semibold text-[#0D0D0D]">Publish Chat</h2>
-          <button onClick={onClose} className="text-[#6B6B6B] hover:text-[#0D0D0D]">✕</button>
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
+      <div className="bg-[#1a1a1a] border border-white/10 rounded-2xl shadow-2xl w-full max-w-md p-6">
+        <div className="flex items-center justify-between mb-5">
+          <h2 className="text-base font-semibold text-white">Publish Chat</h2>
+          <button onClick={onClose} className="text-white/30 hover:text-white/70 transition-colors p-1">
+            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
         </div>
 
         {published ? (
-          <div className="space-y-3">
-            <p className="text-sm text-[#6B6B6B]">Your chat is now public at:</p>
-            <div className="flex items-center gap-2 bg-gray-50 rounded-lg p-3">
-              <p className="text-sm text-[#0D0D0D] flex-1 truncate">{published}</p>
+          <div className="space-y-4">
+            <div className="flex items-center gap-2 p-3 bg-white/5 border border-white/10 rounded-xl">
+              <p className="text-xs text-white/60 flex-1 truncate">{published}</p>
               <button
-                onClick={() => navigator.clipboard.writeText(published)}
-                className="text-xs text-[#6B6B6B] hover:text-[#0D0D0D] shrink-0"
+                onClick={handleCopy}
+                className="text-xs shrink-0 px-2.5 py-1 rounded-lg bg-white/8 text-white/60 hover:text-white hover:bg-white/12 transition-colors"
               >
-                Copy
+                {copied ? '✓ Copied' : 'Copy'}
               </button>
             </div>
-            <button onClick={onClose} className="w-full mt-2 px-4 py-2 bg-black text-white text-sm rounded-lg hover:bg-gray-800">
+            <p className="text-xs text-white/30 text-center">Your chat is now publicly accessible</p>
+            <button
+              onClick={onClose}
+              className="w-full py-2.5 bg-gradient-to-r from-violet-600 to-indigo-600 text-white text-sm font-medium rounded-xl hover:opacity-90 transition-opacity"
+            >
               Done
             </button>
           </div>
         ) : (
           <div className="space-y-4">
             <div>
-              <label className="text-xs font-medium text-[#6B6B6B] uppercase tracking-wide">Description (optional)</label>
+              <label className="text-[10px] font-semibold text-white/30 uppercase tracking-widest">
+                Description (optional)
+              </label>
               <textarea
                 value={description}
                 onChange={e => setDescription(e.target.value)}
                 rows={3}
                 placeholder="What's this chat about?"
-                className="mt-1 w-full px-3 py-2 text-sm border border-[#E5E5E5] rounded-lg outline-none resize-none"
+                className="mt-2 w-full px-3 py-2.5 text-sm bg-white/5 border border-white/10 rounded-xl outline-none resize-none text-white/80 placeholder-white/20 focus:border-white/20 transition-colors"
               />
             </div>
 
-            <label className="flex items-center gap-3 cursor-pointer">
-              <input
-                type="checkbox"
-                checked={allowFork}
-                onChange={e => setAllowFork(e.target.checked)}
-                className="w-4 h-4"
-              />
-              <span className="text-sm text-[#0D0D0D]">Allow others to fork and continue this chat</span>
+            <label className="flex items-center gap-3 cursor-pointer group">
+              <div
+                onClick={() => setAllowFork(v => !v)}
+                className={`w-4 h-4 rounded flex items-center justify-center border transition-colors ${
+                  allowFork
+                    ? 'bg-violet-600 border-violet-600'
+                    : 'border-white/20 bg-white/5'
+                }`}
+              >
+                {allowFork && (
+                  <svg className="w-2.5 h-2.5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                  </svg>
+                )}
+              </div>
+              <span className="text-sm text-white/60 group-hover:text-white/80 transition-colors">
+                Allow others to fork and continue this chat
+              </span>
             </label>
 
-            <div className="flex gap-2 pt-2">
-              <button onClick={onClose} className="flex-1 px-4 py-2 border border-[#E5E5E5] text-sm rounded-lg hover:bg-gray-50">
+            <div className="flex gap-2 pt-1">
+              <button
+                onClick={onClose}
+                className="flex-1 py-2.5 border border-white/10 text-sm text-white/50 rounded-xl hover:bg-white/5 hover:text-white/70 transition-colors"
+              >
                 Cancel
               </button>
               <button
                 onClick={handlePublish}
                 disabled={loading}
-                className="flex-1 px-4 py-2 bg-black text-white text-sm rounded-lg hover:bg-gray-800 disabled:opacity-50"
+                className="flex-1 py-2.5 bg-gradient-to-r from-violet-600 to-indigo-600 text-white text-sm font-medium rounded-xl hover:opacity-90 transition-opacity disabled:opacity-40"
               >
                 {loading ? 'Publishing...' : 'Publish'}
               </button>

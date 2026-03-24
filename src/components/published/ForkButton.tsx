@@ -15,26 +15,20 @@ export default function ForkButton({ publishedChatId }: Props) {
   const handleFork = async () => {
     setLoading(true);
 
-    // Get current user (if logged in)
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
+    const { data: { user } } = await supabase.auth.getUser();
 
-    // Fetch original messages
     const { data: messages } = await supabase
       .from("messages")
       .select("*")
       .eq("chat_id", publishedChatId)
       .order("message_index", { ascending: true });
 
-    // Get original chat info
     const { data: originalChat } = await supabase
       .from("chats")
       .select("*")
       .eq("id", publishedChatId)
       .single();
 
-    // Create new forked chat with user_id if logged in
     const { data: newChat, error } = await supabase
       .from("chats")
       .insert({
@@ -52,7 +46,6 @@ export default function ForkButton({ publishedChatId }: Props) {
       return;
     }
 
-    // Bulk insert messages into new chat
     if (messages && messages.length > 0) {
       await supabase.from("messages").insert(
         messages.map((m) => ({
@@ -62,7 +55,7 @@ export default function ForkButton({ publishedChatId }: Props) {
           model_id: m.model_id,
           image_urls: m.image_urls,
           message_index: m.message_index,
-        })),
+        }))
       );
     }
 
@@ -74,9 +67,24 @@ export default function ForkButton({ publishedChatId }: Props) {
     <button
       onClick={handleFork}
       disabled={loading}
-      className="px-4 py-1.5 bg-black text-white text-sm rounded-lg hover:bg-gray-800 transition-colors disabled:opacity-50"
+      className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-violet-600 to-indigo-600 text-white text-sm font-medium rounded-xl hover:opacity-90 transition-opacity disabled:opacity-50 shadow-lg shadow-violet-500/20"
     >
-      {loading ? "Forking..." : "Continue this chat →"}
+      {loading ? (
+        <>
+          <svg className="w-3.5 h-3.5 animate-spin" fill="none" viewBox="0 0 24 24">
+            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
+          </svg>
+          Forking...
+        </>
+      ) : (
+        <>
+          <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
+          </svg>
+          Continue this chat
+        </>
+      )}
     </button>
   );
 }
