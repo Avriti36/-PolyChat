@@ -1,4 +1,5 @@
 # PolyChat
+<img width="1914" height="884" alt="Screenshot 2026-03-30 114327" src="https://github.com/user-attachments/assets/df8bd396-8e68-43a7-a2fb-e5479f23aad8" />
 
 A full-stack AI chat application that lets you chat with 50+ LLMs through a single interface, switch models mid-conversation, use voice input, and share chats publicly.
 
